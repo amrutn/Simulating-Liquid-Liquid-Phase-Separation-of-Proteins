@@ -19,7 +19,7 @@ def main():
 			os.mkdir(data_dir)
 		specs = config["specifications"]
 
-	with open(os.path.join(data_dir, "config_copy.txt"), 'w', newline = '') as f:
+	with open(os.path.join(data_dir, "config_copy.json"), 'w', newline = '') as f:
 		f.write(json.dumps(config))
 	vol_dat = []
 	run_num = 0
@@ -28,12 +28,14 @@ def main():
 		sample_volume = run_vals["sample_volume"]
 		sample_diffusive_const = run_vals["sample_diffusive_const"]
 		num_timesteps = run_vals["Number of timesteps"]
+		molecular_radius = run_vals["Molecular Radius"]
+		min_droplet_vol = run_vals["Min Droplet Volume"]
 		num_droplets = []
 
 		means = []
 		for c in concentrations:
 			print("Started run for concentration " + str(c) + "uM", flush = True)
-			sample = Sample(sample_volume, sample_diffusive_const, c)
+			sample = Sample(sample_volume, sample_diffusive_const, c, molecular_radius, min_droplet_vol)
 			aggs = sample.simulate(num_timesteps)
 			volumes = []
 			for agg in aggs:

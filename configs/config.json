@@ -1,0 +1,1 @@
+{"data_dir": "../sim_data", "specifications": [ {"concentrations": [0.1, 0.5, 1, 2, 3, 4, 5, 10, 15, 20, 25], "sample_volume": 1, "sample_diffusive_const": 0.05, "Number of timesteps": 60, "Molecular Radius" : 0.01, "Min Droplet Volume" : 0.0001}]}

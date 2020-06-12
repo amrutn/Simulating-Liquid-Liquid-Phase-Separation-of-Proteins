@@ -23,13 +23,17 @@ config = {"data_dir" : "../sim_data",
 	"concentrations" : [0.1, 0.2, 0.4, 0.8, 1.6, 3.2, 6.4, 10],
 	"sample_volume" : 100,
 	"sample_diffusive_const" : 5 * 0.01,
-	"Number of timesteps" : 100
+	"Number of timesteps" : 100,
+	"Molecular Radius" : 0.01,
+	"Min Droplet Volume" : 0.00015
 	}, 
 	{
 	"concentrations" : [0.1, 0.2, 0.4, 0.8, 1.6, 3.2, 6.4, 10, 12.8, 25.6],
 	"sample_volume" : 20,
 	"sample_diffusive_const" : 5 * 0.01, 
-	"Number of timesteps" : 30
+	"Number of timesteps" : 30,
+	"Molecular Radius" : 0.01,
+	"Min Droplet Volume" : 0.00015
 	}
 	]
 	}

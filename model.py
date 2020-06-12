@@ -12,8 +12,7 @@ class Aggregate:
     Represents an aggregate of one or more molecules.
     """
 
-    molecular_radius = 0.01 #um
-    def __init__(self, num_molecules, coordinates, diffusive_const, is_droplet = False):
+    def __init__(self, num_molecules, coordinates, diffusive_const, molecular_radius, min_droplet_vol):
         """
         Initializes a molecular aggregate.
 
@@ -31,8 +30,9 @@ class Aggregate:
             True if the aggregate is large enough to be considered a droplet
 
         """
+        self.min_droplet_vol = min_droplet_vol
         self.num_molecules = num_molecules
-        self.radius = (num_molecules)**(1/3) * self.molecular_radius
+        self.radius = (num_molecules)**(1/3) * molecular_radius
         self.coordinates = coordinates
         self.diffusion_var_per_sec = 6 * diffusive_const/self.radius #See solution to diffusion equation and its variance
         self.diffuse_time = 0
@@ -53,7 +53,7 @@ class Aggregate:
         """
         Returns whether or not the aggregate is large enough to be considered a droplet.
         """
-        return (self.volume() > 0.0001)
+        return (self.volume() > self.min_droplet_vol)
 
     def update_diffuse_time(self):
         """
@@ -80,11 +80,13 @@ class Sample:
     into droplets. 
     """
 
-    def __init__(self, sample_volume, diffusive_const, concentration):
+    def __init__(self, sample_volume, diffusive_const, concentration, molecular_radius, min_droplet_vol):
 
         """
         Initializes the sample.
         """
+        self.molecular_radius = molecular_radius
+        self.min_droplet_vol = min_droplet_vol
         self.diffusive_const = diffusive_const
         self.num_molecules = concentration * 6 * 10**2 * sample_volume
         self.sample_volume = sample_volume
@@ -92,7 +94,7 @@ class Sample:
         i = 0
         while i < self.num_molecules:
             coords = sample_volume**(1/3) * np.random.rand(3)
-            self.aggregates.append(Aggregate(1, coords, diffusive_const))
+            self.aggregates.append(Aggregate(1, coords, diffusive_const, molecular_radius, min_droplet_vol))
             i += 1
     def num_droplets(self):
         """
@@ -129,7 +131,7 @@ class Sample:
                     if path_distance <= self.aggregates[i].radius + self.aggregates[j].radius:
                         num_merged_molecules = self.aggregates[i].num_molecules + self.aggregates[j].num_molecules
                         new_coords = np.add(pA, pB)/2
-                        merged = Aggregate(num_merged_molecules, new_coords, self.diffusive_const)
+                        merged = Aggregate(num_merged_molecules, new_coords, self.diffusive_const, self.molecular_radius, self.min_droplet_vol )
                         self.aggregates.append(merged)
                         self.aggregates.pop(j)
                         self.aggregates.pop(i)
