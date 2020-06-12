@@ -1,6 +1,10 @@
 import numpy as np
+import tqdm
+import time
+from helper import closestDistanceBetweenLines
 
 """ All units are in um, uM and s. diffusion_var_per_sec is in um^2/s. Each lattice point is the size of a molecule"""
+
 
 
 class Aggregate:
@@ -49,30 +53,22 @@ class Aggregate:
         """
         Returns whether or not the aggregate is large enough to be considered a droplet.
         """
-        return (self.volume() > 0.01)
+        return (self.volume() > 0.0001)
 
-    def merge_distance(self):
-        """
-        Returns the effective distance over which the aggregate can merge with another aggregate.
-        """
-        return self.radius + np.sqrt(self.diffusion_var_per_sec * self.diffuse_time)
     def update_diffuse_time(self):
         """
         Increases the amount of time without diffusion by 1 for the aggregate.
         """
         self.diffuse_time += 1
 
-    def overlap(self, agg2):
+    def update_coords(self):
         """
-        Merges self with another aggregate and returns the new aggregate
+        Moves the aggregate in a random direction by a distance set by the diffusion constant
         """
-        distance = np.linalg.norm(self.coords() - agg2.coords())
-        if distance > self.merge_distance() + agg2.merge_distance():
-            return False, None
-        num_merged_molecules = self.num_molecules + agg2.num_molecules
-        merged_volume = self.volume() + agg2.volume()
-        center_of_mass = (self.coords() * self.volume() + agg2.coords() * agg2.volume())/merged_volume
-        return True, Aggregate(num_merged_molecules, center_of_mass, self.diffusion_var_per_sec * self.radius)
+        delta = np.random.normal(0, np.sqrt(self.diffusion_var_per_sec), 3)
+        self.coordinates = np.add(self.coords(), delta)
+        return self.coords()
+
 
 
         
@@ -89,7 +85,7 @@ class Sample:
         """
         Initializes the sample.
         """
-
+        self.diffusive_const = diffusive_const
         self.num_molecules = concentration * 6 * 10**2 * sample_volume
         self.sample_volume = sample_volume
         self.aggregates = []
@@ -110,29 +106,39 @@ class Sample:
     
     def simulate(self, timesteps):
         """
-        Simulates the placement and merging of individual molecules
+        Simulates the placement, movement and merging of individual molecules
+
+        Which aggregates merge is determined by simulating the movement of the aggregates
+        in random directions and checking whether or not they intersect. 
+    
         """
-        time = 0
-        while time < timesteps:
+        for i in tqdm.tqdm(range(timesteps)):
             num_aggs = len(self.aggregates)
+            path_list = []
             for agg in self.aggregates:
-            	agg.update_diffuse_time()
+                prev_coords = agg.coords()
+                agg.update_diffuse_time()
+                coords = agg.update_coords()
+                path_list.append([prev_coords, coords])
             i = 0
             while i < num_aggs:
                 j = i + 1
                 while j < num_aggs:
-                    overlap, merged = self.aggregates[i].overlap(self.aggregates[j])
-                    if j == i:
-                        overlap = False
-                    if overlap:
+
+                    pA, pB, path_distance = closestDistanceBetweenLines(path_list[i][0], path_list[i][1], path_list[j][0], path_list[j][1])
+                    if path_distance <= self.aggregates[i].radius + self.aggregates[j].radius:
+                        num_merged_molecules = self.aggregates[i].num_molecules + self.aggregates[j].num_molecules
+                        new_coords = np.add(pA, pB)/2
+                        merged = Aggregate(num_merged_molecules, new_coords, self.diffusive_const)
                         self.aggregates.append(merged)
                         self.aggregates.pop(j)
                         self.aggregates.pop(i)
-                        num_aggs -= 1
+                        path_list.pop(j)
+                        path_list.pop(i)
+                        num_aggs -= 2
                         j = i
                     j += 1
                 i += 1
-            time += 1
         return self.aggregates
 
 

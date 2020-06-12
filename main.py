@@ -18,6 +18,10 @@ def main():
 		if not os.path.isdir(data_dir):
 			os.mkdir(data_dir)
 		specs = config["specifications"]
+
+	with open(os.path.join(data_dir, "config_copy.txt"), 'w', newline = '') as f:
+		f.write(json.dumps(config))
+	vol_dat = []
 	run_num = 0
 	for run_vals in specs:
 		concentrations = run_vals["concentrations"]
@@ -35,6 +39,7 @@ def main():
 			for agg in aggs:
 				if agg.is_droplet():
 					volumes.append(agg.volume())
+			vol_dat += [volumes]
 			if len(volumes) == 0:
 				num_droplets.append(0)
 				means.append(0)
@@ -47,13 +52,10 @@ def main():
 
 		run_dir = os.path.join(data_dir, "run" + str(run_num))
 		os.mkdir(run_dir)
-		print(run_dir)
 		with open(os.path.join(run_dir, "volumes_dat.csv"), 'w', newline = '') as csvfile:
 			writer = csv.writer(csvfile, delimiter = ',')
-			writer.writerow(volumes)
+			writer.writerows(vol_dat)
 
-		with open(os.path.join(run_dir, "config_copy.txt"), 'w', newline = '') as f:
-			f.write(json.dumps(config))
 
 		plt.rc('font', family='serif')
 		fig = plt.figure(figsize=(10, 10))
