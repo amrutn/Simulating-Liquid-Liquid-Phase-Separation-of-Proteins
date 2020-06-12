@@ -1,6 +1,6 @@
 import numpy as np
 
-""" All units are in um, uM and s. Diffusivity is in um^2/s. Each lattice point is the size of a molecule"""
+""" All units are in um, uM and s. diffusion_var_per_sec is in um^2/s. Each lattice point is the size of a molecule"""
 
 
 class Aggregate:
@@ -30,7 +30,7 @@ class Aggregate:
         self.num_molecules = num_molecules
         self.radius = (num_molecules)**(1/3) * self.molecular_radius
         self.coordinates = coordinates
-        self.diffusivity = diffusive_const/self.radius
+        self.diffusion_var_per_sec = 6 * diffusive_const/self.radius #See solution to diffusion equation and its variance
         self.diffuse_time = 0
 
     def volume(self):
@@ -55,7 +55,7 @@ class Aggregate:
         """
         Returns the effective distance over which the aggregate can merge with another aggregate.
         """
-        return self.radius + np.sqrt(self.diffusivity) * self.diffuse_time
+        return self.radius + np.sqrt(self.diffusion_var_per_sec * self.diffuse_time)
     def update_diffuse_time(self):
         """
         Increases the amount of time without diffusion by 1 for the aggregate.
@@ -72,7 +72,7 @@ class Aggregate:
         num_merged_molecules = self.num_molecules + agg2.num_molecules
         merged_volume = self.volume() + agg2.volume()
         center_of_mass = (self.coords() * self.volume() + agg2.coords() * agg2.volume())/merged_volume
-        return True, Aggregate(num_merged_molecules, center_of_mass, self.diffusivity * self.radius)
+        return True, Aggregate(num_merged_molecules, center_of_mass, self.diffusion_var_per_sec * self.radius)
 
 
         
